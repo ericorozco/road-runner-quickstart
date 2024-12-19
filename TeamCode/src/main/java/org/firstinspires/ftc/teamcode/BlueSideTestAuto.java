@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.teleops;
+package org.firstinspires.ftc.teamcode;
 import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -10,7 +10,6 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -52,7 +51,7 @@ public class BlueSideTestAuto extends LinearOpMode {
             return new LiftUp();
         }
 
-        public class LiftDown implements Action {
+     /*   public class LiftDown implements Action {
             private boolean initialized = false;
 
             @Override
@@ -75,9 +74,9 @@ public class BlueSideTestAuto extends LinearOpMode {
         public Action liftDown(){
             return new LiftDown();
         }
-    }
+    }*/
 
-    public class Claw {
+   /* public class Claw {
         private Servo claw;
 
         public Claw(HardwareMap hardwareMap) {
@@ -105,7 +104,7 @@ public class BlueSideTestAuto extends LinearOpMode {
         public Action openClaw() {
             return new OpenClaw();
         }
-    }
+    }*/
 
     @Override
     public void runOpMode() {
