@@ -29,7 +29,7 @@ public final class ThreeDeadWheelLocalizer implements Localizer {
 
     public final Encoder par0, par1, perp;
 
-    public double inPerTick = 498.1875;
+    public double inPerTick = 0.002051176862725;
 
     private int lastPar0Pos, lastPar1Pos, lastPerpPos;
     private boolean initialized;

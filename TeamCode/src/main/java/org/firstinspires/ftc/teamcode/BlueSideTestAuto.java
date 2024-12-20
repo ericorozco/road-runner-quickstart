@@ -3,150 +3,143 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.MecanumKinematics;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.ProfileParams;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+/**
+ *
+ * @author Gerry DLIII - 18908 Mighty Hawks
+ * @version 1.0, 12/20/2024
+ */
 @Config
-@Autonomous(name = "BLUE_TEST_AUTO_PIXEL", group = "Autonomous")
+@Autonomous(name = "Right Auto", group = "ITD Auto", preselectTeleOp = "AyMarthaV2")
 public class BlueSideTestAuto extends LinearOpMode {
-    public class Lift {
-        private DcMotorEx lift;
+    private DcMotorEx OuttakeSliderRight;
+    private DcMotorEx OuttakeSliderLeft;
+    private Servo OuttakeElbowRight;
+    private Servo OuttakeElbowLeft;
+    private Servo OuttakeClaw;
+    final int HIGH_BASKET = 3600;
+    final int HIGH_CHAMBER = 1000;
+    private int initialPositionLeft, initialPositionRight;
 
-        public Lift(HardwareMap hardwareMap) {
-            lift = hardwareMap.get(DcMotorEx.class, "liftMotor");
-            lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            lift.setDirection(DcMotorSimple.Direction.FORWARD);
-        }
+    final double OuttakeElbowPositionIn = 0.2;
+    final double OuttakeElbowPositionOut = 0.92;
+    final double OuttakeElbowPositionMiddle = 0.55;
+    final double OuttakeClawPositionClose = 1.0;
+    final double OuttakeClawPositionOpen = 0.00;
 
-        public class LiftUp implements Action {
-            private boolean initialized = false;
+    private Servo IntakeSliderRight;
+    private Servo IntakeSliderLeft;
+    private enum IntakeState{
+        IN,
+        OUT
+    }
+    final double IntakeSliderPositionOut = 0.60;
+    final double IntakeSliderPositionIN = 0.0;
+    public class Outtake{
 
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (!initialized) {
-                    lift.setPower(0.8);
-                    initialized = true;
-                }
-
-                double pos = lift.getCurrentPosition();
-                packet.put("liftPos", pos);
-                if (pos < 3000.0) {
-                    return true;
-                } else {
-                    lift.setPower(0);
-                    return false;
-                }
-            }
-        }
-        public Action liftUp() {
-            return new LiftUp();
-        }
-
-     /*   public class LiftDown implements Action {
-            private boolean initialized = false;
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (!initialized) {
-                    lift.setPower(-0.8);
-                    initialized = true;
-                }
-
-                double pos = lift.getCurrentPosition();
-                packet.put("liftPos", pos);
-                if (pos > 100.0) {
-                    return true;
-                } else {
-                    lift.setPower(0);
-                    return false;
-                }
-            }
-        }
-        public Action liftDown(){
-            return new LiftDown();
-        }
-    }*/
-
-   /* public class Claw {
-        private Servo claw;
-
-        public Claw(HardwareMap hardwareMap) {
-            claw = hardwareMap.get(Servo.class, "claw");
-        }
-
-        public class CloseClaw implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(0.55);
-                return false;
-            }
-        }
-        public Action closeClaw() {
-            return new CloseClaw();
-        }
-
-        public class OpenClaw implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(1.0);
-                return false;
-            }
-        }
-        public Action openClaw() {
-            return new OpenClaw();
-        }
-    }*/
-
+    }
     @Override
     public void runOpMode() {
-        Pose2d initialPose = new Pose2d(11.8, 61.7, Math.toRadians(90));
+        Pose2d initialPose = new Pose2d(-8, 70, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-        Claw claw = new Claw(hardwareMap);
-        Lift lift = new Lift(hardwareMap);
 
+        //Outtake
+        // Sliders Mapping and Setup
+        OuttakeSliderRight = hardwareMap.get(DcMotorEx.class, "OuttakeSliderRight");
+        OuttakeSliderLeft = hardwareMap.get(DcMotorEx.class, "OuttakeSliderLeft");
+
+        OuttakeSliderRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        OuttakeSliderLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        OuttakeSliderRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        OuttakeSliderLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        initialPositionLeft = OuttakeSliderLeft.getCurrentPosition();
+        initialPositionRight = OuttakeSliderRight.getCurrentPosition();
+
+        //Servo Claw, Elbow, and Wrist Mapping and Setup
+        OuttakeClaw = hardwareMap.get(Servo.class, "OuttakeClaw");
+        OuttakeElbowRight = hardwareMap.get(Servo.class, "OuttakeElbowRight");
+        OuttakeElbowLeft = hardwareMap.get(Servo.class, "OuttakeElbowLeft");
+        //OuttakeWrist = hardwareMap.get(Servo.class, "OuttakeWrist");
+
+        OuttakeClaw.setDirection(Servo.Direction.FORWARD);
+        OuttakeElbowRight.setDirection(Servo.Direction.FORWARD);
+        OuttakeElbowLeft.setDirection(Servo.Direction.REVERSE);
         // vision here that outputs position
         int visionOutputPosition = 1;
 
-        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(33, Math.toRadians(0))
-                .waitSeconds(2)
-                .setTangent(Math.toRadians(90))
-                .lineToY(48)
-                .setTangent(Math.toRadians(0))
-                .lineToX(32)
-                .strafeTo(new Vector2d(44.5, 30))
-                .turn(Math.toRadians(180))
-                .lineToX(47.5)
-                .waitSeconds(3);
-        TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
-                .lineToY(37)
-                .setTangent(Math.toRadians(0))
-                .lineToX(18)
-                .waitSeconds(3)
-                .setTangent(Math.toRadians(0))
-                .lineToXSplineHeading(46, Math.toRadians(180))
-                .waitSeconds(3);
-        TrajectoryActionBuilder tab3 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(33, Math.toRadians(180))
-                .waitSeconds(2)
-                .strafeTo(new Vector2d(46, 30))
-                .waitSeconds(3);
-        Action trajectoryActionCloseOut = tab1.endTrajectory().fresh()
-                .strafeTo(new Vector2d(48, 12))
-                .build();
 
+        OuttakeClaw.setPosition(OuttakeClawPositionClose);
         // actions that need to happen on init; for instance, a claw tightening.
-        Actions.runBlocking(claw.closeClaw());
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
+                .lineToY(47, new TranslationalVelConstraint(100));
+                //.waitSeconds(1);
+        /**
+         * Push the first sample and line up for second sample
+         */
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(new Pose2d(-8, 47, Math.toRadians(90)))
+                //.splineToLinearHeading(new Pose2d(-7.04, 37.15, Math.toRadians(90.00)), Math.toRadians(-89.33))
+                .splineToLinearHeading(new Pose2d(-33.89, 23.0, Math.toRadians(270.00)), Math.toRadians(270.00))
+                //.lineToY(20.0)
+                .strafeTo(new Vector2d(-45.0,23.0))
+                .setTangent(Math.toRadians(270.0))
+                .lineToYConstantHeading(55.0)
+                //.waitSeconds(1.5)
+                .setTangent(Math.toRadians(270.0))
+                .lineToYConstantHeading(23.0)
+                .strafeTo(new Vector2d(-58.0,23.0));
+                //.setTangent(Math.toRadians(270.0))
 
+        /**
+             * Push the second sample
+         */
+        TrajectoryActionBuilder tab3 = drive.actionBuilder(new Pose2d(-58, 18.0, Math.toRadians(270.00)))
+                .lineToYConstantHeading(53.0, new TranslationalVelConstraint(90))
+                .waitSeconds(0.5);
+        /**
+         * Prepare to grab sample
+         */
+        TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(-58, 53.0, Math.toRadians(270.00)))
+
+                //.strafeTo(new Vector2d(-40.0,50.0), 1000, 500)
+                .strafeTo(new Vector2d(-37.0,58.0))
+                .setTangent(Math.toRadians(270.0))
+                .lineToY(62.0, new TranslationalVelConstraint(100))
+                .waitSeconds(0.5);
+
+        /**
+         * Line up to high chamber
+         */
+        TrajectoryActionBuilder tab5 = drive.actionBuilder(new Pose2d(-30.0, 60.0, Math.toRadians(270.0)))
+                .splineToLinearHeading(new Pose2d(-8.0, 40, Math.toRadians(90.0)), Math.toRadians(90.0))
+                //.lineToY(60.00)
+                .waitSeconds(0.5);
+        /**
+         *Park
+         */
+        TrajectoryActionBuilder tab6 = drive.actionBuilder(new Pose2d(-8.0, 40.0, Math.toRadians(90.0)))
+                .splineToLinearHeading(new Pose2d(-30.0, 58.0, Math.toRadians(45.0)), Math.toRadians(45.0))
+                //.lineToY(60.00)
+                .waitSeconds(0.5);
 
         while (!isStopRequested() && !opModeIsActive()) {
             int position = visionOutputPosition;
@@ -158,26 +151,104 @@ public class BlueSideTestAuto extends LinearOpMode {
         telemetry.addData("Starting Position", startPosition);
         telemetry.update();
         waitForStart();
-
-        if (isStopRequested()) return;
-
-        Action trajectoryActionChosen;
-        if (startPosition == 1) {
-            trajectoryActionChosen = tab1.build();
-        } else if (startPosition == 2) {
-            trajectoryActionChosen = tab2.build();
-        } else {
-            trajectoryActionChosen = tab3.build();
-        }
+        OuttakeElbowMove(OuttakeElbowPositionMiddle);
 
         Actions.runBlocking(
                 new SequentialAction(
-                        trajectoryActionChosen,
-                        lift.liftUp(),
-                        claw.openClaw(),
-                        lift.liftDown(),
-                        trajectoryActionCloseOut
+                        tab1.build()
                 )
         );
+        OuttakeSliders(HIGH_CHAMBER, 0, 0);
+
+        sleep(250);
+        OuttakeElbowMove(OuttakeElbowPositionOut);
+        sleep(500);
+        OuttakeSliders(-HIGH_CHAMBER, 0, 0);
+        sleep(850);
+        OuttakeElbowMove(OuttakeElbowPositionMiddle);
+        if (isStopRequested()) return;
+        Actions.runBlocking(
+                new SequentialAction(
+                        tab2.build()
+                )
+        );
+        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
+        OuttakeElbowMove(OuttakeElbowPositionOut);
+
+        Actions.runBlocking(
+                new SequentialAction(
+                        tab3.build()
+                )
+        );
+
+        Actions.runBlocking(
+                new SequentialAction(
+                        tab4.build()
+                )
+        );
+        OuttakeClaw.setPosition(OuttakeClawPositionClose);
+        sleep(400);
+        OuttakeElbowMove(OuttakeElbowPositionMiddle);
+        Actions.runBlocking(
+                new SequentialAction(
+                        tab5.build()
+                )
+        );
+        sleep(500);
+        OuttakeSliders(HIGH_CHAMBER,0,0);
+        sleep(600);
+        OuttakeElbowMove(OuttakeElbowPositionOut);
+        sleep(500);
+        OuttakeSliders(-HIGH_CHAMBER,0,0);
+        sleep(500);
+        OuttakeElbowMove(OuttakeElbowPositionMiddle);
+        Actions.runBlocking(
+                new SequentialAction(
+                        tab6.build()
+                )
+        );
+        intakeSlidersElbow(IntakeState.OUT);
+        sleep(500);
+
+
     }
+
+    private void OuttakeSliders(int targetPosition, int velocity, int timeout) {
+        // Set run modes for both motors
+        OuttakeSliderRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        OuttakeSliderLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Synchronize motion
+        OuttakeSliderRight.setTargetPosition(targetPosition + initialPositionRight);
+        OuttakeSliderLeft.setTargetPosition(targetPosition + initialPositionLeft);
+
+        //Run to target position
+        OuttakeSliderRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        OuttakeSliderLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //Set power
+        OuttakeSliderRight.setPower(0.85);
+        OuttakeSliderLeft.setPower(0.85);
+    }
+    private void OuttakeElbowMove(double OuttakeElbowTargetPosition){
+        OuttakeElbowRight.setPosition(OuttakeElbowTargetPosition);
+        OuttakeElbowLeft.setPosition(OuttakeElbowTargetPosition);
+    }
+    public void intakeSlidersElbow(IntakeState os){
+        // Set run modes for both motors
+
+        switch (os){
+            case IN:
+                IntakeSliderRight.setPosition(IntakeSliderPositionIN);
+                IntakeSliderLeft.setPosition(IntakeSliderPositionIN);
+               break;
+            case OUT:
+                IntakeSliderRight.setPosition(IntakeSliderPositionOut);
+                IntakeSliderLeft.setPosition(IntakeSliderPositionOut);
+                break;
+
+        }
+
+    }
+
 }
