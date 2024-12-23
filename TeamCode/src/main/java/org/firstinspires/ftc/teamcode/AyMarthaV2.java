@@ -92,6 +92,9 @@ public class AyMarthaV2 extends OpMode {
         rightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
+
         //Intake
         //Servo Sliders Mapping and Setup
         IntakeSliderRight = hardwareMap.get(Servo.class, "IntakeSliderRight");
@@ -145,12 +148,6 @@ public class AyMarthaV2 extends OpMode {
         OuttakeClaw.setDirection(Servo.Direction.FORWARD);
         OuttakeElbowRight.setDirection(Servo.Direction.FORWARD);
         OuttakeElbowLeft.setDirection(Servo.Direction.REVERSE);
-        //OuttakeWrist.setDirection(Servo.Direction.FORWARD);
-       /* OuttakeElbowMove(OuttakeElbowPositionIn);
-        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
-        IntakeClaw.setPosition(IntakeClawPositionOpen);
-        IntakeSliderRight.setPosition(IntakeElbowPositionIn);
-        IntakeSliderLeft.setPosition(IntakeElbowPositionIn);*/
 
     }
 

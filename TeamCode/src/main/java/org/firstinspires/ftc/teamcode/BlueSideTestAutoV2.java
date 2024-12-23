@@ -1,17 +1,11 @@
 package org.firstinspires.ftc.teamcode;
-import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.MecanumKinematics;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.ProfileParams;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TrajectoryBuilder;
-import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
@@ -19,9 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -30,8 +22,8 @@ import com.qualcomm.robotcore.hardware.Servo;
  * @version 1.0, 12/20/2024
  */
 @Config
-@Autonomous(name = "Right Auto", group = "ITD Auto", preselectTeleOp = "AyMarthaV2")
-public class BlueSideTestAuto extends LinearOpMode {
+@Autonomous(name = "Right Auto V2", group = "ITD Auto", preselectTeleOp = "AyMarthaV2")
+public class BlueSideTestAutoV2 extends LinearOpMode {
     private DcMotorEx OuttakeSliderRight;
     private DcMotorEx OuttakeSliderLeft;
     private Servo OuttakeElbowRight;
@@ -43,7 +35,6 @@ public class BlueSideTestAuto extends LinearOpMode {
 
     final double OuttakeElbowPositionIn = 0.2;
     final double OuttakeElbowPositionOut = 0.95;
-    final double OuttakeElbowPositionOutSpecimen = 1.0;
     final double OuttakeElbowPositionMiddle = 0.55;
     final double OuttakeClawPositionClose = 1.0;
     final double OuttakeClawPositionOpen = 0.00;
@@ -66,6 +57,8 @@ public class BlueSideTestAuto extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         //drive.setDrivePowers(pv);
 
+        double Y_Samples = 13.0;
+        double Y_Observation_Samples = 53;
         //Outtake
         // Sliders Mapping and Setup
         OuttakeSliderRight = hardwareMap.get(DcMotorEx.class, "OuttakeSliderRight");
@@ -105,65 +98,60 @@ public class BlueSideTestAuto extends LinearOpMode {
         OuttakeClaw.setPosition(OuttakeClawPositionClose);
         // actions that need to happen on init; for instance, a claw tightening.
         TrajectoryActionBuilder driveToHighChamber = drive.actionBuilder(initialPose)
-                .lineToY(47, new TranslationalVelConstraint(75));
+                .lineToY(47, new TranslationalVelConstraint(100));
                 //.waitSeconds(1);
         /**
          * Push the first sample and line up for second sample
          */
-        TrajectoryActionBuilder firstSample = drive.actionBuilder(new Pose2d(-8, 47.0, Math.toRadians(90)))
+        TrajectoryActionBuilder firstSample = drive.actionBuilder(new Pose2d(-8, 47, Math.toRadians(90)))
                 //.splineToLinearHeading(new Pose2d(-7.04, 37.15, Math.toRadians(90.00)), Math.toRadians(-89.33))
-                .splineToLinearHeading(new Pose2d(-33.0, 40.0, Math.toRadians(270.0)), Math.toRadians(270.0))
-                //.setTangent(270.0)
-                .lineToY(20.0)
-                //.turnTo(270.0)
-                .strafeTo(new Vector2d(-45.0,19.0), new TranslationalVelConstraint(70))
+                .splineToLinearHeading(new Pose2d(-33.89, Y_Samples, Math.toRadians(270.00)), Math.toRadians(270.00))
+                //.lineToY(20.0)
+                .strafeTo(new Vector2d(-45.0,Y_Samples), new TranslationalVelConstraint(100))
                 .setTangent(Math.toRadians(270.0))
-                .lineToYConstantHeading(55.0, new TranslationalVelConstraint(70))
+                .lineToYConstantHeading(Y_Observation_Samples, new TranslationalVelConstraint(100))
                 //.waitSeconds(1.5)
                 .setTangent(Math.toRadians(270.0))
-                .lineToYConstantHeading(23.0)
-                .strafeTo(new Vector2d(-58.0,23.0));
+                .lineToYConstantHeading(Y_Samples)
+                .strafeTo(new Vector2d(-55.0,Y_Samples));
                 //.setTangent(Math.toRadians(270.0))
 
         /**
              * Push the second sample
          */
-        TrajectoryActionBuilder secondSample = drive.actionBuilder(new Pose2d(-58, 18.0, Math.toRadians(270.00)))
-                .lineToYConstantHeading(53.0, new TranslationalVelConstraint(70))
+        TrajectoryActionBuilder secondSample = drive.actionBuilder(new Pose2d(-55.0, Y_Samples, Math.toRadians(270.00)))
+                .lineToYConstantHeading(Y_Observation_Samples)
                 .waitSeconds(0.5);
         /**
          * Prepare to grab sample
          */
-        TrajectoryActionBuilder lineUpToSecondSpecimen = drive.actionBuilder(new Pose2d(-58, 53.0, Math.toRadians(270.00)))
+        TrajectoryActionBuilder lineUpToSecondSample = drive.actionBuilder(new Pose2d(-55.0, Y_Observation_Samples, Math.toRadians(270.00)))
+                .setTangent(Math.toRadians(270.0))
+                .lineToYConstantHeading(Y_Samples)
+                .strafeTo(new Vector2d(-61.0,Y_Samples))
+                .setTangent(Math.toRadians(270.0))
+                .lineToYConstantHeading(Y_Observation_Samples)
                 .setTangent(Math.toRadians(270.0))
                 .lineToYConstantHeading(50.0)
                 //.strafeTo(new Vector2d(-40.0,50.0), 1000, 500)
                 .strafeTo(new Vector2d(-37.0,50.0))
                 .setTangent(Math.toRadians(270.0))
-                .lineToY(60, new TranslationalVelConstraint(70));
+                .lineToY(60, new TranslationalVelConstraint(100));
                // .waitSeconds(0.5);
 
         /**
          * Line up to high chamber
          */
-        TrajectoryActionBuilder driveToHighChamberSecondSample = drive.actionBuilder(new Pose2d(-37.0, 60.0, Math.toRadians(270.0)))
-                .splineToLinearHeading(new Pose2d(-3.0, 48.0, Math.toRadians(90.0)), Math.toRadians(90.0));
+        TrajectoryActionBuilder driveToHighChamberSecondSample = drive.actionBuilder(new Pose2d(-37.0, 50.0, Math.toRadians(270.0)))
+                .splineToLinearHeading(new Pose2d(-3.0, 37.0, Math.toRadians(90.0)), Math.toRadians(90.0));
                 //.lineToY(60.00)
                 //.waitSeconds(0.5);
         /**
          *Park
          */
-        TrajectoryActionBuilder parkObservationZone = drive.actionBuilder(new Pose2d(-3.0, 48.0, Math.toRadians(90.0)))
-                .splineToLinearHeading(new Pose2d(-37.0, 55.0, Math.toRadians(270.0)), Math.toRadians(270.0))
-                //.setTangent(270.0)
-                .lineToY(60.00)
-                .waitSeconds(0.25);
-
-        /**
-         * Line up to high chamber
-         */
-        TrajectoryActionBuilder driveToHighChamberThirdSample = drive.actionBuilder(new Pose2d(-37.0, 60.0, Math.toRadians(270.0)))
-                .splineToLinearHeading(new Pose2d(-3.0, 48.0, Math.toRadians(90.0)), Math.toRadians(90.0));
+        TrajectoryActionBuilder parkObservationZone = drive.actionBuilder(new Pose2d(-3.0, 37.0, Math.toRadians(90.0)))
+                .splineToLinearHeading(new Pose2d(-30.0, 58.0, Math.toRadians(270.0)), Math.toRadians(270.0))                //.lineToY(60.00)
+                .waitSeconds(0.5);
 
         while (!isStopRequested() && !opModeIsActive()) {
             int position = visionOutputPosition;
@@ -197,11 +185,11 @@ public class BlueSideTestAuto extends LinearOpMode {
          */
         OuttakeSliders(HIGH_CHAMBER, 0, 0);
 
-        sleep(350);
+        sleep(250);
         OuttakeElbowMove(OuttakeElbowPositionOut);
-        sleep(500);
-        OuttakeSliders(-(HIGH_CHAMBER - 150), 0, 0);
         sleep(400);
+        OuttakeSliders(-(HIGH_CHAMBER - 100), 0, 0);
+        sleep(700);
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
 
         /**
@@ -238,7 +226,7 @@ public class BlueSideTestAuto extends LinearOpMode {
          */
         Actions.runBlocking(
                 new SequentialAction(
-                        lineUpToSecondSpecimen.build()
+                        lineUpToSecondSample.build()
                 )
         );
 
@@ -246,7 +234,7 @@ public class BlueSideTestAuto extends LinearOpMode {
          * Grab second Specimen from Wall and Prepare Elbow to Transport
          */
         OuttakeClaw.setPosition(OuttakeClawPositionClose);
-        sleep(500);
+        sleep(300);
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
         /**
          * Drive to align to the HIGH CHAMBER
@@ -259,14 +247,13 @@ public class BlueSideTestAuto extends LinearOpMode {
         /**
          * Place second sample on the HIGH CHAMBER
          */
-        sleep(300);
+        sleep(500);
         OuttakeSliders(HIGH_CHAMBER,0,0);
-        sleep(350);
+        sleep(600);
         OuttakeElbowMove(OuttakeElbowPositionOut);
-        sleep(250);
+        sleep(500);
         OuttakeSliders(-HIGH_CHAMBER,0,0);
-        sleep(350);
-        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
+        sleep(500);
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
         OuttakeClaw.setPosition(OuttakeClawPositionOpen);
 
@@ -279,33 +266,6 @@ public class BlueSideTestAuto extends LinearOpMode {
                 )
         );
         OuttakeElbowMove(OuttakeElbowPositionOut);
-        /**
-         * Grab second Specimen from Wall and Prepare Elbow to Transport
-         */
-        OuttakeClaw.setPosition(OuttakeClawPositionClose);
-        sleep(450);
-        OuttakeElbowMove(OuttakeElbowPositionMiddle);
-        /**
-         * Drive to align to the HIGH CHAMBER
-         */
-        Actions.runBlocking(
-                new SequentialAction(
-                        driveToHighChamberSecondSample.build()
-                )
-        );
-        /**
-         * Place second sample on the HIGH CHAMBER
-         */
-        sleep(300);
-        OuttakeSliders(HIGH_CHAMBER,0,0);
-        sleep(350);
-        OuttakeElbowMove(OuttakeElbowPositionOut);
-        sleep(400);
-        OuttakeSliders(-HIGH_CHAMBER,0,0);
-        sleep(400);
-        OuttakeElbowMove(OuttakeElbowPositionMiddle);
-        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
-
         sleep(500);
 
 
