@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
  * @author Gerry DLIII - 18908 Mighty Hawks
  * @version 1.0, 12/20/2024
  */
-@TeleOp(name = "AyMarthaNoPP TeleOP", group = "ITD Teleop")
+@TeleOp(name = "AyMartha RR TeleOP", group = "ITD Teleop")
 public class AyMarthaV2 extends OpMode {
 
     private enum IntakeState{
@@ -57,13 +57,13 @@ public class AyMarthaV2 extends OpMode {
     private boolean IntakeSliderChanged = false;
     final double IntakeClawPositionClose = 1.0;
     final double IntakeClawPositionOpen = 0.00;
-    final double IntakeSliderPositionIN = 0.0;
-    final double IntakeSliderPositionOut = 0.60;
-    final double IntakeElbowPositionIn = 0.90;
-    final double IntakeElbowPositionOut = 0.1;
-    final double OuttakeElbowPositionIn = 0.2;
-    final double OuttakeElbowPositionOut = 1.00;
-    final double OuttakeElbowPositionMiddle = 0.55;
+    public double IntakeSliderPositionIN = 0.73;
+    final double IntakeSliderPositionOut = 0.35;
+    final double IntakeElbowPositionIn = 1.0;
+    final double IntakeElbowPositionOut = 0.0;
+    final double OuttakeElbowPositionOut = 0.05;
+    final double OuttakeElbowPositionIn = 0.85;
+    final double OuttakeElbowPositionMiddle = 0.48;
     final double OuttakeWristPositionOut = 0.80;
     final double OuttakeWristPositionIn = 0.00;
     final double OuttakeClawPositionClose = 1.0;
@@ -305,7 +305,7 @@ public class AyMarthaV2 extends OpMode {
         telemetry.addData("Outtake Elbow R Pos: ", OuttakeElbowRight.getPosition() );
         telemetry.addData("Outtake Elbow Down: ", OuttakeElbowDown );
         telemetry.addData("Intake Elbow Down: ", IntakeElbowDown );
-        telemetry.addData("TouchSensor: ", IntakeSensor.isPressed() );
+        telemetry.addData("Intake Claw Open: ", IntakeClawOpen );
 
         //Telemetry to get the touchpad x / y
         /*if(gamepad1.touchpad_finger_1){
