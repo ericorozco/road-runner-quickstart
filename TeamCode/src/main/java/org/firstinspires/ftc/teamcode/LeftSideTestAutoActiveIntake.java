@@ -5,15 +5,14 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 
 /**
  *
@@ -21,8 +20,8 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
  * @version 1.0, 12/20/2024
  */
 @Config
-@Autonomous(name = "Left Auto", group = "ITD Auto", preselectTeleOp = "AyMarthaV2")
-public class LeftSideTestAuto extends LinearOpMode {
+@Autonomous(name = "Left Auto ActiveIntake", group = "ITD Auto", preselectTeleOp = "AyMarthaV2")
+public class LeftSideTestAutoActiveIntake extends LinearOpMode {
     private DcMotorEx OuttakeSliderRight;
     private DcMotorEx OuttakeSliderLeft;
     private Servo OuttakeElbowRight;
@@ -33,7 +32,8 @@ public class LeftSideTestAuto extends LinearOpMode {
     public int initialPositionLeft, initialPositionRight;
 
     final double OuttakeElbowPositionOut = 0.15;
-    final double OuttakeElbowPositionIn = 0.85;
+    final double OuttakeElbowPositionOutAscent = 0.35;
+    final double OuttakeElbowPositionIn = 0.75;
     final double OuttakeElbowPositionMiddle = 0.48;
     final double OuttakeElbowPositionOutSpecimen = 0.1;
     //final double OuttakeElbowPositionMiddle = 0.55;
@@ -46,14 +46,17 @@ public class LeftSideTestAuto extends LinearOpMode {
         IN,
         OUT
     }
-    private Servo IntakeClaw;
+//    private Servo IntakeClaw;
 
-    public static double IntakeSliderPositionIN = 0.73;
-    final double IntakeSliderPositionOut = 0.35;
-    final double IntakeElbowPositionIn = 0.95;
-    final double IntakeElbowPositionOut = 0.0;
+    public static double IntakeSliderPositionIN = 0.70;
+    final double IntakeSliderPositionOut = 0.25;
+    final double IntakeElbowPositionIn = 0.69;
+    final double IntakeElbowPositionOut = -0.15;
     private Servo IntakeElbowRight;
     private Servo IntakeElbowLeft;
+    private CRServo RightWheel;
+    private CRServo LeftWheel;
+
     private boolean IntakeClawOpen = true;
     private boolean IntakeSliderChanged = false;
     final double IntakeClawPositionClose = 0.0;
@@ -64,15 +67,15 @@ public class LeftSideTestAuto extends LinearOpMode {
 //    public static double x_initial, x_park;
     public static double SliderVelocity = 0.9;
     public static double x_initial = 8;
-    public static double y_firstSpecimen = 48.5;
+    public static double y_firstSpecimen = 48.00;
     public static double y_initial = 70;
-    public static double y_firstYSample = 57.50;
-    public static double x_firstYSample = 43.5;
+    public static double y_firstYSample = 63.0;
+    public static double x_firstYSample = 45.0;
     public static double x_ascent = 22.0;
     public static double y_ascent = 15.0;
     public static double x_toScore = 50.0;
     public static double y_toScore = 63.0;
-    public static double x_secondYSample = 51.0;
+    public static double x_secondYSample = 55.0;
 //    public static double y_park;
     @Override
 
@@ -115,9 +118,15 @@ public class LeftSideTestAuto extends LinearOpMode {
         IntakeSliderRight = hardwareMap.get(Servo.class, "IntakeSliderRight");
         IntakeSliderLeft = hardwareMap.get(Servo.class, "IntakeSliderLeft");
 
+        RightWheel = hardwareMap.get(CRServo.class, "RightWheel");
+        LeftWheel = hardwareMap.get(CRServo.class, "LeftWheel");
+
+        RightWheel.setDirection(CRServo.Direction.FORWARD);
+        LeftWheel.setDirection(CRServo.Direction.REVERSE);
+
         IntakeSliderRight.setDirection(Servo.Direction.FORWARD);
         IntakeSliderLeft.setDirection(Servo.Direction.REVERSE);
-        IntakeClaw = hardwareMap.get(Servo.class, "IntakeClaw");
+//        IntakeClaw = hardwareMap.get(Servo.class, "IntakeClaw");
 
         IntakeElbowRight = hardwareMap.get(Servo.class, "IntakeElbowRight");
         IntakeElbowLeft = hardwareMap.get(Servo.class, "IntakeElbowLeft");
@@ -137,29 +146,44 @@ public class LeftSideTestAuto extends LinearOpMode {
                 .lineToY(y_firstSpecimen, new TranslationalVelConstraint(90));
                 //.waitSeconds(1);
         /**
-         * Push the first sample and line up for first yellow sample
+         * Place the first Specimen and line up for first yellow sample
          */
         TrajectoryActionBuilder firstSample = drive.actionBuilder(new Pose2d(x_initial, y_firstSpecimen, Math.toRadians(90)))
                 //.splineToLinearHeading(new Pose2d(-7.04, 37.15, Math.toRadians(90.00)), Math.toRadians(-89.33))
                 .splineToLinearHeading(new Pose2d(x_firstYSample, y_firstYSample, Math.toRadians(270.0)), Math.toRadians(180.0), new TranslationalVelConstraint(20));
 
         /**
-             * Place first Sample High Basket
+         * Drive to the first yellow sample
          */
-        TrajectoryActionBuilder firstSampleScore = drive.actionBuilder(new Pose2d(x_firstYSample, y_firstYSample, Math.toRadians(270.00)))
+        TrajectoryActionBuilder firstSampleIntake = drive.actionBuilder(new Pose2d(x_firstYSample, y_firstYSample, Math.toRadians(270.0)))
+                //.splineToLinearHeading(new Pose2d(-7.04, 37.15, Math.toRadians(90.00)), Math.toRadians(-89.33))
+                //.setTangent(270.0)
+                .lineToY(y_firstYSample - 8.0);
+
+        /**
+         * Place first Sample High Basket
+         */
+        TrajectoryActionBuilder firstSampleScore = drive.actionBuilder(new Pose2d(x_firstYSample, y_firstYSample - 8.0, Math.toRadians(270.00)))
                 .splineToLinearHeading(new Pose2d(x_toScore, y_toScore, Math.toRadians(225.0)), Math.toRadians(225.0), new TranslationalVelConstraint(20));
 
         /**
-         * Prepare to grab Second Sample
+         * Line up to the Second Yellow Sample
          */
         TrajectoryActionBuilder lineUpToSecondSample = drive.actionBuilder(new Pose2d(x_toScore, y_toScore, Math.toRadians(225.0)))
                 .splineToLinearHeading(new Pose2d(x_secondYSample, y_firstYSample, Math.toRadians(270.00)), Math.toRadians(270.00), new TranslationalVelConstraint(20));
                // .waitSeconds(0.5);
+        /**
+         * Drive to the Second yellow sample
+         */
+        TrajectoryActionBuilder SecondSampleIntake = drive.actionBuilder(new Pose2d(x_secondYSample, y_firstYSample, Math.toRadians(270.0)))
+                //.splineToLinearHeading(new Pose2d(-7.04, 37.15, Math.toRadians(90.00)), Math.toRadians(-89.33))
+                //.setTangent(270.0)
+                .lineToY(y_firstYSample - 8.0);
 
         /**
          * Line up to high Basket
          */
-        TrajectoryActionBuilder secondSampleScore = drive.actionBuilder(new Pose2d(x_secondYSample, y_firstYSample, Math.toRadians(270.00)))
+        TrajectoryActionBuilder secondSampleScore = drive.actionBuilder(new Pose2d(x_secondYSample, y_firstYSample - 8.0, Math.toRadians(270.00)))
                 .splineToLinearHeading(new Pose2d(x_toScore, y_toScore, Math.toRadians(225.0)), Math.toRadians(225.0), new TranslationalVelConstraint(20));                //.lineToY(60.00)
                 //.waitSeconds(0.5);
         /**
@@ -221,22 +245,37 @@ public class LeftSideTestAuto extends LinearOpMode {
         );
         OuttakeClaw.setPosition(OuttakeClawPositionOpen);
 
-        IntakeClaw.setPosition(IntakeClawPositionOpen);
+//        IntakeClaw.setPosition(IntakeClawPositionOpen);
         intakeSlidersElbow(IntakeState.OUT);
-        sleep(750);
-        IntakeClaw.setPosition(IntakeClawPositionClose);
-        sleep(400);
+        IntakeWheels(1);
+        sleep(550);
+
+        /**
+         *Line To Y to First Yellow Sample
+         */
+        Actions.runBlocking(
+                new SequentialAction(
+                        firstSampleIntake.build()
+                )
+        );
+
+//        IntakeClaw.setPosition(IntakeClawPositionClose);
+       // sleep(400);//400 10:29
         OuttakeElbowMove(OuttakeElbowPositionIn);
-        sleep(500);
+        //IntakeWheels(0);
+        sleep(500);//500
         intakeSlidersElbow(IntakeState.IN);
-        sleep(500);
+        sleep(500);//500
         OuttakeClaw.setPosition(OuttakeClawPositionClose);
-        sleep(750);
-        IntakeClaw.setPosition(IntakeClawPositionOpen);
-        sleep(500);
+        sleep(250);//750
+        IntakeWheels(2);
+        sleep(300);//500
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
+        //remove this after complete this section
+        //sleep(750);
+        IntakeWheels(0);
         OuttakeSliders(HIGH_BASKET, 0 , 0);
-        sleep(800);
+        sleep(350);//800
 
 
 
@@ -249,7 +288,7 @@ public class LeftSideTestAuto extends LinearOpMode {
                         firstSampleScore.build()
                 )
         );
-        sleep(1000);
+        sleep(700);//1000
         OuttakeElbowMove(OuttakeElbowPositionOut);
         sleep(500);
         OuttakeClaw.setPosition(OuttakeClawPositionOpen);
@@ -257,15 +296,15 @@ public class LeftSideTestAuto extends LinearOpMode {
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
         sleep(800);
         OuttakeSliders(-(HIGH_BASKET),0,0);
-        sleep(1200);
-
+        sleep(1000);//1200
         /**
          * Prepare Claw to get Sample from the floor
          */
 
         //OuttakeClaw.setPosition(OuttakeClawPositionOpen);
         OuttakeElbowMove(OuttakeElbowPositionIn);
-        IntakeClaw.setPosition(IntakeClawPositionOpen);
+        IntakeWheels(1);
+//        IntakeClaw.setPosition(IntakeClawPositionOpen);
         intakeSlidersElbow(IntakeState.OUT);
 
         /**
@@ -278,19 +317,29 @@ public class LeftSideTestAuto extends LinearOpMode {
         );
         OuttakeSliderLeft.setPower(0);
         OuttakeSliderRight.setPower(0);
-        IntakeClaw.setPosition(IntakeClawPositionClose);
-        sleep(400);
+//        IntakeClaw.setPosition(IntakeClawPositionClose);
+       // sleep(400);
         OuttakeElbowMove(OuttakeElbowPositionIn);
+        /**
+         * Drive to get second Sample from Floor
+         */
+        Actions.runBlocking(
+                new SequentialAction(
+                        SecondSampleIntake.build()
+                )
+        );
         sleep(500);
         intakeSlidersElbow(IntakeState.IN);
         sleep(500);
         OuttakeClaw.setPosition(OuttakeClawPositionClose);
-        sleep(750);
-        IntakeClaw.setPosition(IntakeClawPositionOpen);
-        sleep(500);
+        sleep(250);
+        IntakeWheels(2);
+
+//        IntakeClaw.setPosition(IntakeClawPositionOpen);
+        sleep(300);
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
         OuttakeSliders(HIGH_BASKET, 0 , 0);
-        sleep(800);
+        sleep(350);
 
 
         /**
@@ -305,7 +354,7 @@ public class LeftSideTestAuto extends LinearOpMode {
         /**
          * Place second sample on the HIGH Basket
          */
-        sleep(1000);
+        sleep(700);//700
         OuttakeElbowMove(OuttakeElbowPositionOut);
         sleep(500);
         OuttakeClaw.setPosition(OuttakeClawPositionOpen);
@@ -313,7 +362,9 @@ public class LeftSideTestAuto extends LinearOpMode {
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
         sleep(800);
         OuttakeSliders(-(HIGH_BASKET),0,0);
-        sleep(2500);
+        sleep(1000);
+        OuttakeElbowMove(OuttakeElbowPositionOutAscent);
+        //requestOpModeStop();
 
 
         /**
@@ -358,8 +409,8 @@ public class LeftSideTestAuto extends LinearOpMode {
             case IN:
                 IntakeElbowRight.setPosition(IntakeElbowPositionIn);
                 IntakeElbowLeft.setPosition(IntakeElbowPositionIn);
-                sleep(500);
-                IntakeClaw.setPosition(0.4);
+                sleep(750);
+//                IntakeClaw.setPosition(0.4);
                 IntakeSliderRight.setPosition(IntakeSliderPositionIN);
                 IntakeSliderLeft.setPosition(IntakeSliderPositionIN);
 
@@ -373,6 +424,27 @@ public class LeftSideTestAuto extends LinearOpMode {
 
         }
 
+    }
+    public void IntakeWheels(int on_off){
+        switch (on_off){
+            case 1:
+                RightWheel.setPower(1.0);
+                LeftWheel.setPower(1.0);
+                break;
+            case 0:
+                RightWheel.setPower(0.0);
+                LeftWheel.setPower(0.0);
+                break;
+            case 2:
+                RightWheel.setPower(-0.25);
+                LeftWheel.setPower(-0.25);
+                break;
+            default:
+                RightWheel.setPower(0.0);
+                LeftWheel.setPower(0.0);
+            break;
+
+        }
     }
 
 }

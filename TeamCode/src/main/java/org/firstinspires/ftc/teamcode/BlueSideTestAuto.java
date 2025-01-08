@@ -286,10 +286,10 @@ public class BlueSideTestAuto extends LinearOpMode {
         sleep(250);
         OuttakeElbowMove(OuttakeElbowPositionOut);
         sleep(400);
-        OuttakeSliders(-(HIGH_CHAMBER-500),0,0);
+        OuttakeSliders(-(HIGH_CHAMBER-50),0,0);
         sleep(350);
         OuttakeClaw.setPosition(OuttakeClawPositionOpen);
-        OuttakeElbowMove(OuttakeElbowPositionOutSpecimen);
+        OuttakeElbowMove(OuttakeElbowPositionOut);
 
         // OuttakeClaw.setPosition(OuttakeClawPositionOpen);
 

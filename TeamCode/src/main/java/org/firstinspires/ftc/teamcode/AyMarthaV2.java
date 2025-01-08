@@ -46,8 +46,8 @@ public class AyMarthaV2 extends OpMode {
     //private CRServo LeftWheel;
     //private CRServo RightWheel;
     private TouchSensor IntakeSensor;
-    final int HIGH_BASKET = 3600;
-    final int HIGH_CHAMBER = 2300;
+    public static int HIGH_BASKET = 3600;
+    public static int HIGH_CHAMBER = 1650;
     private int initialPositionLeft, initialPositionRight;
 
     private boolean IntakeElbowDown = false;
@@ -57,11 +57,11 @@ public class AyMarthaV2 extends OpMode {
     private boolean IntakeSliderChanged = false;
     final double IntakeClawPositionClose = 1.0;
     final double IntakeClawPositionOpen = 0.00;
-    public double IntakeSliderPositionIN = 0.73;
+    public static double IntakeSliderPositionIN = 0.73;
     final double IntakeSliderPositionOut = 0.35;
-    final double IntakeElbowPositionIn = 1.0;
+    final double IntakeElbowPositionIn = 0.95;
     final double IntakeElbowPositionOut = 0.0;
-    final double OuttakeElbowPositionOut = 0.05;
+    final double OuttakeElbowPositionOut = 0.14;
     final double OuttakeElbowPositionIn = 0.85;
     final double OuttakeElbowPositionMiddle = 0.48;
     final double OuttakeWristPositionOut = 0.80;
@@ -199,14 +199,14 @@ public class AyMarthaV2 extends OpMode {
             RightWheel.setPower(0.0);
             LeftWheel.setPower(0.0);
         }*/
-        if(gamepad1.left_bumper && !IntakeClawOpen){
+        if(gamepad1.right_bumper && !IntakeClawOpen){
             if(IntakeClaw.getPosition() == IntakeClawPositionOpen){
                 IntakeClaw.setPosition(IntakeClawPositionClose);
             }else{
                 IntakeClaw.setPosition(IntakeClawPositionOpen);
             }
             IntakeClawOpen = true;
-        }else if (!gamepad1.left_bumper) {
+        }else if (!gamepad1.right_bumper) {
             IntakeClawOpen = false;
         }
 
@@ -242,7 +242,7 @@ public class AyMarthaV2 extends OpMode {
 
         }else if(gamepad1.dpad_down){
 
-            outtakeSliders(OuttakeSliderLeft.getCurrentPosition() - 200, 2000, 10);
+            outtakeSliders(50, 2000, 10);
 
         }
 
@@ -261,12 +261,12 @@ public class AyMarthaV2 extends OpMode {
         //Outtake Elbow Middle
         if(gamepad1.dpad_up){
             OuttakeElbowMove(OuttakeElbowPositionMiddle);
-        } else if (gamepad1.dpad_right) {
+        } else if (gamepad1.dpad_left) {
             //OuttakeElbowRight.setPosition(OuttakeElbowPositionOut);
             //OuttakeElbowLeft.setPosition(OuttakeElbowPositionOut);
             OuttakeElbowMove(OuttakeElbowPositionIn);
             OuttakeClaw.setPosition(OuttakeClawPositionOpen);
-        } else if (gamepad1.dpad_left) {
+        } else if (gamepad1.dpad_right) {
             //OuttakeElbowRight.setPosition(OuttakeElbowPositionOut);
             //OuttakeElbowLeft.setPosition(OuttakeElbowPositionOut);
             OuttakeClaw.setPosition(OuttakeClawPositionClose);
@@ -282,14 +282,14 @@ public class AyMarthaV2 extends OpMode {
         */
 
         //Outtake Claw Toggle
-        if(gamepad1.right_bumper && !OuttakeClawOpen){
+        if(gamepad1.left_bumper && !OuttakeClawOpen){
             if(OuttakeClaw.getPosition() == OuttakeClawPositionOpen){
                 OuttakeClaw.setPosition(OuttakeClawPositionClose);
             }else{
                 OuttakeClaw.setPosition(OuttakeClawPositionOpen);
             }
             OuttakeClawOpen = true;
-        }else if (!gamepad1.right_bumper) {
+        }else if (!gamepad1.left_bumper) {
             OuttakeClawOpen = false;
         }
 
@@ -337,8 +337,8 @@ public class AyMarthaV2 extends OpMode {
         OuttakeSliderLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         //Set power
-        OuttakeSliderRight.setPower(0.75);
-        OuttakeSliderLeft.setPower(0.75);
+        OuttakeSliderRight.setPower(0.9);
+        OuttakeSliderLeft.setPower(0.9);
         // while(OuttakeSliderRight.isBusy() && OuttakeSliderLeft.isBusy()){
 
         //}
