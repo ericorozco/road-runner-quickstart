@@ -29,7 +29,7 @@ public class LeftSideTestAutoActiveIntake extends LinearOpMode {
     private Servo OuttakeClaw;
     final int HIGH_BASKET = 3600;
     final int HIGH_CHAMBER = 1000;
-    public int initialPositionLeft, initialPositionRight;
+    public static int initialPositionLeft, initialPositionRight;
 
     final double OuttakeElbowPositionOut = 0.15;
     final double OuttakeElbowPositionOutAscent = 0.35;

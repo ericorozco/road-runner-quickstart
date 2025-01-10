@@ -63,7 +63,13 @@ public class BlueSideTestAuto extends LinearOpMode {
 //    public static double x_initial, x_park;
     public static double SliderVelocity = 0.9;
     public static double x_initial = -8;
-    public static double y_firstSpecimen = 48.5;
+    public static double y_firstSpecimen = 48.0;
+    public static double y_firstWallSpecimen = 62.0;
+    public static double x_firstWallSpecimen = -45.0;
+    public static double x_secondWallSpecimen = -42.0;
+    public static double y_secondWallSpecimen = 62.0;
+    public static double y_thirdSpecimen = 46.0;
+    public static double y_secondSpecimen = 46.0;
     public static double y_initial = 70;
 //    public static double y_park;
     @Override
@@ -128,7 +134,7 @@ public class BlueSideTestAuto extends LinearOpMode {
                 //.setTangent(270.0)
                 .lineToY(20.0, new TranslationalVelConstraint(90))
                 //.turnTo(270.0)
-                .strafeTo(new Vector2d(-45.0,19.0), new TranslationalVelConstraint(90))
+                .strafeTo(new Vector2d(-45.0,20.0), new TranslationalVelConstraint(90))
                 .setTangent(Math.toRadians(270.0))
                 .lineToYConstantHeading(58.0, new TranslationalVelConstraint(90))
                 //.waitSeconds(1.5)
@@ -146,44 +152,44 @@ public class BlueSideTestAuto extends LinearOpMode {
         /**
          * Prepare to grab Specimen
          */
+
         TrajectoryActionBuilder lineUpToSecondSpecimen = drive.actionBuilder(new Pose2d(-58, 53.0, Math.toRadians(270.00)))
                 .setTangent(Math.toRadians(270.0))
                 .lineToYConstantHeading(50.0)
                 //.strafeTo(new Vector2d(-40.0,50.0), 1000, 500)
-                .strafeTo(new Vector2d(-42.0,50.0))
+                .strafeTo(new Vector2d(x_firstWallSpecimen,50.0))
                 .setTangent(Math.toRadians(270.0))
-                .lineToY(61, new TranslationalVelConstraint(70));
+                .lineToY(y_firstWallSpecimen, new TranslationalVelConstraint(70));
                // .waitSeconds(0.5);
 
         /**
          * Line up to high chamber
          */
-        TrajectoryActionBuilder driveToHighChamberSecondSample = drive.actionBuilder(new Pose2d(-42.0, 61, Math.toRadians(270.0)))
-                .splineToLinearHeading(new Pose2d(-3.0, 48.0, Math.toRadians(90.0)), Math.toRadians(90.0));
+        TrajectoryActionBuilder driveToHighChamberSecondSample = drive.actionBuilder(new Pose2d(x_firstWallSpecimen, y_firstWallSpecimen, Math.toRadians(270.0)))
+                .splineToLinearHeading(new Pose2d(-3.0, y_secondSpecimen, Math.toRadians(90.0)), Math.toRadians(90.0));
                 //.lineToY(60.00)
                 //.waitSeconds(0.5);
-        /**
-         *Park
-         */
-        TrajectoryActionBuilder parkObservationZone = drive.actionBuilder(new Pose2d(-3.0, 48.0, Math.toRadians(90.0)))
-                .splineToLinearHeading(new Pose2d(-37.0, 53.0, Math.toRadians(270.0)), Math.toRadians(270.0))
+/**
+ *Park
+ */
+        TrajectoryActionBuilder parkObservationZone2 = drive.actionBuilder(new Pose2d(-3.0, y_secondSpecimen, Math.toRadians(90.0)))
+                .splineToLinearHeading(new Pose2d(x_firstWallSpecimen, 53.0, Math.toRadians(270.0)), Math.toRadians(270.0))
                 //.setTangent(270.0)
-                .lineToY(60.0)
-                .waitSeconds(0.15);
-
+                .lineToY(y_secondWallSpecimen);
+                //.waitSeconds(0.15);
         /**
          * Line up to high chamber
          */
-        TrajectoryActionBuilder driveToHighChamberThirdSample = drive.actionBuilder(new Pose2d(-37.0, 61.0, Math.toRadians(270.0)))
-                .splineToLinearHeading(new Pose2d(-6.0, 49, Math.toRadians(90.0)), Math.toRadians(90.0));
-        /**
+        TrajectoryActionBuilder driveToHighChamberThirdSample = drive.actionBuilder(new Pose2d(x_firstWallSpecimen, y_secondWallSpecimen, Math.toRadians(270.0)))
+                .splineToLinearHeading(new Pose2d(-6.0, y_thirdSpecimen, Math.toRadians(90.0)), Math.toRadians(90.0));
+       /* *//**
          *Park
-         */
-        TrajectoryActionBuilder parkObservationZone2 = drive.actionBuilder(new Pose2d(-3.0, 48.0, Math.toRadians(90.0)))
-                .splineToLinearHeading(new Pose2d(-37.0, 53.0, Math.toRadians(270.0)), Math.toRadians(270.0))
+         *//*
+        TrajectoryActionBuilder parkObservationZone2 = drive.actionBuilder(new Pose2d(-3.0, y_firstSpecimen - 2.25, Math.toRadians(90.0)))
+                .splineToLinearHeading(new Pose2d(-42.0, 53.0, Math.toRadians(270.0)), Math.toRadians(270.0))
                 //.setTangent(270.0)
                 .lineToY(61.0)
-                .waitSeconds(0.15);
+                .waitSeconds(0.15);*/
 
         while (!isStopRequested() && !opModeIsActive()) {
             int position = visionOutputPosition;
@@ -222,7 +228,9 @@ public class BlueSideTestAuto extends LinearOpMode {
         OuttakeElbowMove(OuttakeElbowPositionOut);
         sleep(400);
         OuttakeSliders(-(HIGH_CHAMBER - 50), 0, 0);
-        sleep(500);
+        sleep(300);
+        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
+        sleep(200);
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
 
         /**
@@ -249,7 +257,7 @@ public class BlueSideTestAuto extends LinearOpMode {
         /**
          * Prepare Claw to get Specimen from Wall
          */
-        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
+        //OuttakeClaw.setPosition(OuttakeClawPositionOpen);
         OuttakeElbowMove(OuttakeElbowPositionOut);
         OuttakeSliderLeft.setPower(0);
         OuttakeSliderRight.setPower(0);

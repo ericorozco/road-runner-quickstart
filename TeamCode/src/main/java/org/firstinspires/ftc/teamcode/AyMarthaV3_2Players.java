@@ -1,34 +1,42 @@
 package org.firstinspires.ftc.teamcode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 
-
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.sun.tools.javac.code.Attribute;
+
+import java.util.Objects;
 
 
 /**
   *
  * @author Gerry DLIII - 18908 Mighty Hawks
- * @version 1.0, 12/20/2024
+ * @version 3.0, 12/20/2024
  */
-@TeleOp(name = "AyMartha 2P RR", group = "ITD Teleop")
-public class AyMarthaV2_2Players extends OpMode {
+@Disabled
+@TeleOp(name = "Crush V3 2P RR", group = "ITD Teleop")
+public class AyMarthaV3_2Players extends OpMode {
 
     private enum IntakeState{
         IN,
         OUT
     }
-    private enum IntakeCurrState{
-        IN,
-        OUT
+    // Define states for the robot
+    private enum RobotState {
+        IDLE,
+        INTAKING,
+        OUTTAKING,
+        OUTTAKING_WRONG_COLOR,
+        MANUAL
     }
+    RobotState robotState = RobotState.IDLE;
     private DcMotorEx leftFront;
     private DcMotorEx leftRear;
     private DcMotorEx rightFront;
@@ -37,9 +45,6 @@ public class AyMarthaV2_2Players extends OpMode {
     private DcMotorEx OuttakeSliderLeft;
     private Servo IntakeSliderRight;
     private Servo IntakeSliderLeft;
-//    private Servo IntakeClaw;
-
-    //private Servo OuttakeWrist;
     private Servo OuttakeElbowRight;
     private Servo OuttakeElbowLeft;
     private Servo OuttakeClaw;
@@ -58,27 +63,32 @@ public class AyMarthaV2_2Players extends OpMode {
     private boolean OuttakeClawOpen = false;
     private boolean IntakeClawOpen = true;
     private boolean IntakeSliderChanged = false;
-    final double IntakeClawPositionClose = 1.0;
-    final double IntakeClawPositionOpen = 0.00;
     public static double IntakeSliderPositionIN = 0.72;
     final double IntakeSliderPositionOut = 0.25;
-    final double IntakeElbowPositionIn = 0.75;
-    final double IntakeElbowPositionOut = 0.05;
+    final double IntakeElbowPositionIn = 0.67;
+    final double IntakeElbowPositionOut = -0.15;
     final double OuttakeElbowPositionOut = 0.14;
     final double OuttakeElbowPositionSpecimenScoring = 0.38;
     final double OuttakeElbowPositionIn = 0.73;
     final double OuttakeElbowPositionMiddle = 0.48;
-    final double OuttakeWristPositionOut = 0.80;
-    final double OuttakeWristPositionIn = 0.00;
     final double OuttakeClawPositionClose = 1.0;
     final double OuttakeClawPositionOpen = 0.00;
     boolean TurnOuttakeSlidersOff = false;
     private int intakeCurrentState = 0;
     public int PlayerSelection = 2;
     public int leftPosition, rightPosition;
-    public ElapsedTime slidersElapsedTime;
-
-
+    public ElapsedTime slidersElapsedTime, IntakeET, OuttakeET;
+    private enum AllianceColor{
+        RED,
+        BLUE
+    }
+    private AllianceColor allianceColor = AllianceColor.RED;
+    private enum SampleColor{
+        RED,
+        BLUE,
+        YELLOW
+    }
+    private SampleColor sampleColor;
     /**
      * This initializes the drive motors as well as the Follower and motion Vectors.
      */
@@ -124,10 +134,6 @@ public class AyMarthaV2_2Players extends OpMode {
         IntakeElbowRight.setDirection(Servo.Direction.FORWARD);
         IntakeElbowLeft.setDirection(Servo.Direction.REVERSE);
 
-        //IntakeClaw.scaleRange(0.0, 1.0);
-        //IntakeElbowRight.scaleRange(0.0, 1.0);
-        //IntakeElbowLeft.scaleRange(0.0, 1.0);
-
         //Outtake
         // Sliders Mapping and Setup
         OuttakeSliderRight = hardwareMap.get(DcMotorEx.class, "OuttakeSliderRight");
@@ -146,7 +152,6 @@ public class AyMarthaV2_2Players extends OpMode {
         OuttakeClaw = hardwareMap.get(Servo.class, "OuttakeClaw");
         OuttakeElbowRight = hardwareMap.get(Servo.class, "OuttakeElbowRight");
         OuttakeElbowLeft = hardwareMap.get(Servo.class, "OuttakeElbowLeft");
-        //OuttakeWrist = hardwareMap.get(Servo.class, "OuttakeWrist");
 
         OuttakeClaw.setDirection(Servo.Direction.FORWARD);
         OuttakeElbowRight.setDirection(Servo.Direction.FORWARD);
@@ -154,19 +159,15 @@ public class AyMarthaV2_2Players extends OpMode {
         TurnOuttakeSlidersOff = false;
 
         slidersElapsedTime = new ElapsedTime();
+        IntakeET = new ElapsedTime();
+        OuttakeET = new ElapsedTime();
         slidersElapsedTime.reset();
         telemetry.addData("Initial Pos Right", initialPositionRight);
         telemetry.addData("Initial Pos Left", initialPositionLeft);
     }
 
-    /**
-     * This runs the OpMode. This is only drive control with Pedro Pathing live centripetal force
-     * correction.
-     */
     @Override
     public void loop() {
-        //follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
-        //follower.update();
 
         // Mecanum Drivetrain Manually Programmed
         double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
@@ -183,6 +184,47 @@ public class AyMarthaV2_2Players extends OpMode {
         leftRear.setPower(backLeftPower);
         rightFront.setPower(frontRightPower);
         rightRear.setPower(backRightPower);
+        switch(robotState){
+            case IDLE:
+                if (gamepad1.right_bumper){
+                    IntakeET.reset();
+                    intakeSlidersElbow(IntakeState.OUT);
+                    RightWheel.setPower(1.0);
+                    LeftWheel.setPower(1.0);
+                    OuttakeElbowMove(OuttakeElbowPositionIn);
+                    OuttakeClaw.setPosition(OuttakeClawPositionOpen);
+                    robotState = RobotState.INTAKING;
+                }
+                break;
+            case INTAKING:
+                if (IntakeET.seconds() > 2.0) {
+                    int red = IntakeSensor.red();
+                    int green = IntakeSensor.green();
+                    int blue = IntakeSensor.blue();
+
+                    if(red>blue+green){
+                         sampleColor = SampleColor.RED;
+
+                    }
+                }
+                break;
+            case OUTTAKING:
+
+            case MANUAL:
+        }
+        if(gamepad1.left_stick_button){
+            allianceColor = AllianceColor.RED;
+        }else if(gamepad1.right_stick_button){
+            allianceColor = AllianceColor.BLUE;
+        }
+        switch(allianceColor){
+            case RED:
+                gamepad1.setLedColor(255.0, 0, 0, 500);
+                break;
+            case BLUE:
+                gamepad1.setLedColor(0, 255, 0, 500);
+                break;
+        }
         switch (PlayerSelection){
             case 1:
                 //All Intake Code
@@ -279,11 +321,6 @@ public class AyMarthaV2_2Players extends OpMode {
                 } else if (!gamepad1.cross) {
                     IntakeSliderChanged = false;
                 }
-                 /*if(gamepad1.left_trigger>0.25){
-                     IntakeClaw.setPosition(IntakeClawPositionClose);
-                 } else if (gamepad1.right_trigger>0.25) {
-                     IntakeClaw.setPosition(IntakeClawPositionOpen);
-                 }*/
 
                 //All Outtake Code (Player 2)
                 //Outtake Sliders Programming
@@ -346,12 +383,24 @@ public class AyMarthaV2_2Players extends OpMode {
 
         }
 
-        //General code for both options (1 or 2 Players)
         if((TurnOuttakeSlidersOff && slidersElapsedTime.seconds() > 5.0)){
             OuttakeSliderLeft.setPower(0.0);
             OuttakeSliderRight.setPower(0.0);
             TurnOuttakeSlidersOff = false;
-        }
+        }/*else{
+             leftPosition = OuttakeSliderLeft.getCurrentPosition() - initialPositionLeft;
+             rightPosition = OuttakeSliderRight.getCurrentPosition() - initialPositionRight;
+
+            if (Math.abs(leftPosition - rightPosition) > 10) {  // If misaligned
+                if (leftPosition > rightPosition) {
+                    OuttakeSliderRight.setPower(1.0);  // Boost the slower motor
+                    OuttakeSliderLeft.setPower(0.85);
+                } else {
+                    OuttakeSliderLeft.setPower(1.0);
+                    OuttakeSliderRight.setPower(0.85);
+                }
+            }
+        }*/
 
 
         //Outtake elbow automatically goes out after reaching high basket position
@@ -388,7 +437,19 @@ public class AyMarthaV2_2Players extends OpMode {
         telemetry.addData("intake Sensor green: ", IntakeSensor.green() );
         telemetry.addData("intake Sensor blue: ", IntakeSensor.blue() );
 
-
+        //Telemetry to get the touchpad x / y
+        /*if(gamepad1.touchpad_finger_1){
+            if(gamepad1.touchpad_finger_1_x != f1x){
+                f1x = gamepad1.touchpad_finger_1_x;
+                gamepad1.setLedColor(120,200,240, 1500);
+            }
+            telemetry.addData("Finger 1 X: ", gamepad1.touchpad_finger_1_x );
+            telemetry.addData("Finger 1 Y: ", gamepad1.touchpad_finger_1_y );
+        }
+        if(gamepad1.touchpad_finger_2){
+            telemetry.addData("Finger 2 X: ", gamepad1.touchpad_finger_2_x );
+            telemetry.addData("Finger 2 Y: ", gamepad1.touchpad_finger_2_y );
+        }*/
 
 
     }
