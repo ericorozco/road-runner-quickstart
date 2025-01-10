@@ -63,13 +63,13 @@ public class BlueSideTestAuto extends LinearOpMode {
 //    public static double x_initial, x_park;
     public static double SliderVelocity = 0.9;
     public static double x_initial = -8;
-    public static double y_firstSpecimen = 48.0;
-    public static double y_firstWallSpecimen = 62.0;
-    public static double x_firstWallSpecimen = -45.0;
+    public static double y_firstSpecimen = 46.75;
+    public static double y_firstWallSpecimen = 62.5;
+    public static double x_firstWallSpecimen = -48.0;
     public static double x_secondWallSpecimen = -42.0;
     public static double y_secondWallSpecimen = 62.0;
-    public static double y_thirdSpecimen = 46.0;
-    public static double y_secondSpecimen = 46.0;
+    public static double y_thirdSpecimen = 44.0;
+    public static double y_secondSpecimen = 44.0;
     public static double y_initial = 70;
 //    public static double y_park;
     @Override
@@ -173,14 +173,14 @@ public class BlueSideTestAuto extends LinearOpMode {
  *Park
  */
         TrajectoryActionBuilder parkObservationZone2 = drive.actionBuilder(new Pose2d(-3.0, y_secondSpecimen, Math.toRadians(90.0)))
-                .splineToLinearHeading(new Pose2d(x_firstWallSpecimen, 53.0, Math.toRadians(270.0)), Math.toRadians(270.0))
+                .splineToLinearHeading(new Pose2d(x_secondWallSpecimen, 53.0, Math.toRadians(270.0)), Math.toRadians(270.0))
                 //.setTangent(270.0)
                 .lineToY(y_secondWallSpecimen);
                 //.waitSeconds(0.15);
         /**
          * Line up to high chamber
          */
-        TrajectoryActionBuilder driveToHighChamberThirdSample = drive.actionBuilder(new Pose2d(x_firstWallSpecimen, y_secondWallSpecimen, Math.toRadians(270.0)))
+        TrajectoryActionBuilder driveToHighChamberThirdSample = drive.actionBuilder(new Pose2d(x_secondWallSpecimen, y_secondWallSpecimen, Math.toRadians(270.0)))
                 .splineToLinearHeading(new Pose2d(-6.0, y_thirdSpecimen, Math.toRadians(90.0)), Math.toRadians(90.0));
        /* *//**
          *Park
@@ -293,7 +293,7 @@ public class BlueSideTestAuto extends LinearOpMode {
         //OuttakeSliders(HIGH_CHAMBER,0,0);
         sleep(250);
         OuttakeElbowMove(OuttakeElbowPositionOut);
-        sleep(400);
+        sleep(350);
         OuttakeSliders(-(HIGH_CHAMBER-50),0,0);
         sleep(350);
         OuttakeClaw.setPosition(OuttakeClawPositionOpen);
@@ -334,11 +334,13 @@ public class BlueSideTestAuto extends LinearOpMode {
 
         //sleep(350);
         OuttakeElbowMove(OuttakeElbowPositionOut);
-        sleep(400);
+        sleep(350);
         OuttakeSliders(-(HIGH_CHAMBER),0,0);
+        sleep(200);
+        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
         sleep(400);
         OuttakeElbowMove(OuttakeElbowPositionMiddle);
-        OuttakeClaw.setPosition(OuttakeClawPositionOpen);
+
 
        // sleep(500);
 
