@@ -61,15 +61,16 @@ public class BlueSideTestAuto extends LinearOpMode {
 
     }
 //    public static double x_initial, x_park;
-    public static double SliderVelocity = 0.9;
+    public static double SliderVelocity = 1.0;
     public static double x_initial = -8;
-    public static double y_firstSpecimen = 46.75;
+    public static double y_firstSpecimen = 46.85;
     public static double y_firstWallSpecimen = 62.5;
-    public static double x_firstWallSpecimen = -48.0;
+    public static double x_firstWallSpecimen = -46.0;
     public static double x_secondWallSpecimen = -42.0;
     public static double y_secondWallSpecimen = 62.0;
     public static double y_thirdSpecimen = 44.0;
-    public static double y_secondSpecimen = 44.0;
+    public static double y_secondSpecimen = 46.0;
+    public static double x_secondSpecimen = -8.0;
     public static double y_initial = 70;
 //    public static double y_park;
     @Override
@@ -147,7 +148,7 @@ public class BlueSideTestAuto extends LinearOpMode {
              * Push the second sample
          */
         TrajectoryActionBuilder secondSample = drive.actionBuilder(new Pose2d(-58, 18.0, Math.toRadians(270.00)))
-                .lineToYConstantHeading(53.0, new TranslationalVelConstraint(90));
+                .lineToYConstantHeading(55.0, new TranslationalVelConstraint(90));
                 //.waitSeconds(0.5);
         /**
          * Prepare to grab Specimen
@@ -166,13 +167,13 @@ public class BlueSideTestAuto extends LinearOpMode {
          * Line up to high chamber
          */
         TrajectoryActionBuilder driveToHighChamberSecondSample = drive.actionBuilder(new Pose2d(x_firstWallSpecimen, y_firstWallSpecimen, Math.toRadians(270.0)))
-                .splineToLinearHeading(new Pose2d(-3.0, y_secondSpecimen, Math.toRadians(90.0)), Math.toRadians(90.0));
+                .splineToLinearHeading(new Pose2d(x_secondSpecimen, y_secondSpecimen, Math.toRadians(90.0)), Math.toRadians(180.0));
                 //.lineToY(60.00)
                 //.waitSeconds(0.5);
 /**
  *Park
  */
-        TrajectoryActionBuilder parkObservationZone2 = drive.actionBuilder(new Pose2d(-3.0, y_secondSpecimen, Math.toRadians(90.0)))
+        TrajectoryActionBuilder parkObservationZone2 = drive.actionBuilder(new Pose2d(x_secondSpecimen, y_secondSpecimen, Math.toRadians(90.0)))
                 .splineToLinearHeading(new Pose2d(x_secondWallSpecimen, 53.0, Math.toRadians(270.0)), Math.toRadians(270.0))
                 //.setTangent(270.0)
                 .lineToY(y_secondWallSpecimen);

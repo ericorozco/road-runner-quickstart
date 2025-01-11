@@ -51,7 +51,7 @@ public class LeftSideTestAutoActiveIntake extends LinearOpMode {
     public static double IntakeSliderPositionIN = 0.70;
     final double IntakeSliderPositionOut = 0.25;
     final double IntakeElbowPositionIn = 0.69;
-    final double IntakeElbowPositionOut = -0.15;
+    final double IntakeElbowPositionOut = 0.1;
     private Servo IntakeElbowRight;
     private Servo IntakeElbowLeft;
     private CRServo RightWheel;
@@ -65,16 +65,16 @@ public class LeftSideTestAutoActiveIntake extends LinearOpMode {
 
     }
 //    public static double x_initial, x_park;
-    public static double SliderVelocity = 0.9;
+    public static double SliderVelocity = 1.0;
     public static double x_initial = 8;
-    public static double y_firstSpecimen = 48.00;
+    public static double y_firstSpecimen = 48.25;
     public static double y_initial = 70;
-    public static double y_firstYSample = 63.0;
-    public static double x_firstYSample = 45.0;
+    public static double y_firstYSample = 67.75;
+    public static double x_firstYSample = 47.0;
     public static double x_ascent = 22.0;
     public static double y_ascent = 15.0;
     public static double x_toScore = 50.0;
-    public static double y_toScore = 63.0;
+    public static double y_toScore = 65.0;
     public static double x_secondYSample = 55.0;
 //    public static double y_park;
     @Override
